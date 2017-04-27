@@ -17,6 +17,11 @@ for item in wordtrain:
     split = lowercase.split()
     trainsentences.append(split)
 model = gensim.models.Word2Vec(trainsentences, min_count = 400, size = 10, alpha = .025, iter = 400 )
+wordmodel = "./Data/wordmodel.pk1"
+wordmodeldump = open(wordmodel, 'wb')
+pickle.dump(model, wordmodeldump)
+wordmodeldump.close()
+
 dbfile ="./Data/ebaydata.pk1"
 def openebaydata():
     dbstore = open(dbfile, 'rb')
