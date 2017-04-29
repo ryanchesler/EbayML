@@ -109,103 +109,101 @@ msg['To'] = you
 
 
 searchindex = 1
-while searchindex != -1:
-    searchindex = random.randrange(0,len(searches))
-    search = searches[searchindex]
-    print(search)
-    url = 'http://svcs.ebay.com/services/search/FindingService/v1?OPERATION-NAME=findItemsByKeywords&sortOrder=StartTimeNewest&buyerPostalCode=92128&SERVICE-VERSION=1.13.0&SECURITY-APPNAME=RyanChes-EbaySear-PRD-d13d69895-95fa1322&RESPONSE-DATA-FORMAT=XML&REST-PAYLOAD&keywords=' + search
-    url = url.replace(" ", "%20")
-    apiResult = urllib.request.urlopen(url)
-    document = apiResult
-    parseddoc = parse(document)
-    items = parseddoc.getElementsByTagName("item")
-    x = 0
-    html = []
-    with tf.Session() as sess:
-        saver.restore(sess, "./Data/Modelv1")
-        for item in items:
-            del msg['Subject']
-            msg['Subject'] = search
-            if item in items:
-                features = []
-                itemData = [0,1,2,3,4,5,6]
-                a = np.array(())
-                itemURL = items[x].getElementsByTagName("viewItemURL")[0].firstChild.data
-                title = items[x].getElementsByTagName("title")[0].firstChild.data
-                itemId = items[x].getElementsByTagName("itemId")[0].firstChild.data
-                itemData[0] = items[x].getElementsByTagName("title")[0].firstChild.data.lower().split()
-                itemData[1] = model1.transform([items[x].getElementsByTagName("categoryId")[0].firstChild.data]).tolist()[0]
-                itemData[2] = model2.transform([items[x].getElementsByTagName("country")[0].firstChild.data]).tolist()[0]
-                itemData[3] = model3.transform([items[x].getElementsByTagName("bestOfferEnabled")[0].firstChild.data]).tolist()[0]
-                bestOffer = items[x].getElementsByTagName("bestOfferEnabled")[0].firstChild.data
-                try:
-                  condition = items[x].getElementsByTagName("conditionDisplayName")[0].firstChild.data
-                  itemData[4] = model4.transform([items[x].getElementsByTagName("conditionId")[0].firstChild.data]).tolist()[0]
-                except:
-                  print("condition not gathered")
-                  itemData[4] = [0,0,0,0,0,0,0]
-                itemData[5] = model5.transform([items[x].getElementsByTagName("listingType")[0].firstChild.data]).tolist()[0]
-                listingType = items[x].getElementsByTagName("listingType")[0].firstChild.data
-                try:
-                  currentPrice = float(items[x].getElementsByTagName("shippingServiceCost")[0].firstChild.data)+ float(items[x].getElementsByTagName("convertedCurrentPrice")[0].firstChild.data)
-                  itemData[6] = [float(items[x].getElementsByTagName("shippingServiceCost")[0].firstChild.data)+ float(items[x].getElementsByTagName("convertedCurrentPrice")[0].firstChild.data)]
-                except:
-                  itemData[6] = [float(100000)]
-                for y in range(len(itemData[0])):
-                  try:
-                    b = None
-                    b = model[itemData[0][y]]
-                  except:
-                    pass
-                  if b is not None:
-                    a = np.hstack((a,b))
-                  else:
-                    pass
-                changesize = 215 - a.size
-                try:
-                  a = np.pad(a,(0, changesize), 'constant', constant_values = (0))
-                  itemData[0] = a
-                except:
-                  print("word vector was too long")
-                  itemData[0] = np.zeros(215)
-                for z in itemData:
-                  for y in z:
-                    features.append(y)
-                features = np.array([features])
-                x+=1
-                res = sess.run(acct_mat, feed_dict = {a_0: features, keep_prob1: 1.0, keep_prob2 : 1.0 ,keep_prob3: 1.0, keep_prob4:1.00})
-                if res == [0]:
-                  if listingType != 'Auction':
-                    if itemId not in itemsAlerted:
-                        dbstore = open(dbfile, 'wb')
-                        itemsAlerted.append(itemId)
-                        pickle.dump(itemsAlerted, dbstore)
-                        dbstore.close()
-                        print(res)
-                        #webbrowser.open(itemURL, new=0, autoraise=True)
-                        message = """<html><head></head><body><h1> """ +" "+str(listingType)+" "+""" Listing</h1><h2><br> Listing Title: """ + str(title) + """</h2><br> Item URL: <a href=\"""" + str(itemURL) + "\"" + """>Ebay Link</a> <br> Price: """ + str(currentPrice) + """ <br> Best Offer Accepted: """ + str(bestOffer) + """<br>""" + str(condition) + """</p><br></body></html>"""
-                        html.append(message)
-        try:
-            messages = ""
-            #print(html)
-            for message in html:
-                messages = str(messages) + str(message)
-                part2 = MIMEText(messages, 'html')
-                msg.set_payload(part2)
-            if messages == "":
-                print("empty message blocked")
+with tf.Session() as sess:
+    saver.restore(sess, "./Data/Modelv1")
+    while searchindex != -1:
+            searchindex = random.randrange(0,len(searches))
+            search = searches[searchindex]
+            print(search)
+            url = 'http://svcs.ebay.com/services/search/FindingService/v1?OPERATION-NAME=findItemsByKeywords&sortOrder=StartTimeNewest&buyerPostalCode=92128&SERVICE-VERSION=1.13.0&SECURITY-APPNAME=RyanChes-EbaySear-PRD-d13d69895-95fa1322&RESPONSE-DATA-FORMAT=XML&REST-PAYLOAD&keywords=' + search
+            url = url.replace(" ", "%20")
+            apiResult = urllib.request.urlopen(url)
+            document = apiResult
+            parseddoc = parse(document)
+            items = parseddoc.getElementsByTagName("item")
+            x = 0
+            html = []
+            for item in items:
+                del msg['Subject']
+                msg['Subject'] = search
+                if item in items:
+                        features = []
+                        itemData = [0,1,2,3,4,5,6]
+                        a = np.array(())
+                        itemURL = items[x].getElementsByTagName("viewItemURL")[0].firstChild.data
+                        title = items[x].getElementsByTagName("title")[0].firstChild.data
+                        itemId = items[x].getElementsByTagName("itemId")[0].firstChild.data
+                        itemData[0] = items[x].getElementsByTagName("title")[0].firstChild.data.lower().split()
+                        itemData[1] = model1.transform([items[x].getElementsByTagName("categoryId")[0].firstChild.data]).tolist()[0]
+                        itemData[2] = model2.transform([items[x].getElementsByTagName("country")[0].firstChild.data]).tolist()[0]
+                        itemData[3] = model3.transform([items[x].getElementsByTagName("bestOfferEnabled")[0].firstChild.data]).tolist()[0]
+                        bestOffer = items[x].getElementsByTagName("bestOfferEnabled")[0].firstChild.data
+                        try:
+                                condition = items[x].getElementsByTagName("conditionDisplayName")[0].firstChild.data
+                                itemData[4] = model4.transform([items[x].getElementsByTagName("conditionId")[0].firstChild.data]).tolist()[0]
+                        except:
+                                print("condition not gathered")
+                        itemData[4] = [0,0,0,0,0,0,0]
+                        itemData[5] = model5.transform([items[x].getElementsByTagName("listingType")[0].firstChild.data]).tolist()[0]
+                        listingType = items[x].getElementsByTagName("listingType")[0].firstChild.data
+                        try:
+                                currentPrice = float(items[x].getElementsByTagName("shippingServiceCost")[0].firstChild.data)+ float(items[x].getElementsByTagName("convertedCurrentPrice")[0].firstChild.data)
+                                itemData[6] = [float(items[x].getElementsByTagName("shippingServiceCost")[0].firstChild.data)+ float(items[x].getElementsByTagName("convertedCurrentPrice")[0].firstChild.data)]
+                        except:
+                                itemData[6] = [float(100000)]
+                        for y in range(len(itemData[0])):
+                                try:
+                                        b = None
+                                        b = model[itemData[0][y]]
+                                except:
+                                        pass
+                                if b is not None:
+                                        a = np.hstack((a,b))
+                                else:
+                                        pass
+                        changesize = 215 - a.size
+                        try:
+                                a = np.pad(a,(0, changesize), 'constant', constant_values = (0))
+                                itemData[0] = a
+                        except:
+                                print("word vector was too long")
+                                itemData[0] = np.zeros(215)
+                        for z in itemData:
+                                for y in z:
+                                        features.append(y)
+                        features = np.array([features])
+                        x+=1
+                        res = sess.run(acct_mat, feed_dict = {a_0: features, keep_prob1: 1.0, keep_prob2 : 1.0 ,keep_prob3: 1.0, keep_prob4:1.00})
+                        if res == [0]:
+                                if listingType != 'Auction':
+                                        if itemId not in itemsAlerted:
+                                                dbstore = open(dbfile, 'wb')
+                                                itemsAlerted.append(itemId)
+                                                pickle.dump(itemsAlerted, dbstore)
+                                                dbstore.close()
+                                                print(res)
+                                                #webbrowser.open(itemURL, new=0, autoraise=True)
+                                                message = """<html><head></head><body><h1> """ +" "+str(listingType)+" "+""" Listing</h1><h2><br> Listing Title: """ + str(title) + """</h2><br> Item URL: <a href=\"""" + str(itemURL) + "\"" + """>Ebay Link</a> <br> Price: """ + str(currentPrice) + """ <br> Best Offer Accepted: """ + str(bestOffer) + """<br>""" + str(condition) + """</p><br></body></html>"""
+                                                html.append(message)
+            try:
+                    messages = ""
+                    for message in html:
+                            messages = str(messages) + str(message)
+                            part2 = MIMEText(messages, 'html')
+                            msg.set_payload(part2)
+                    if messages == "":
+                            print("empty message blocked")
+                    else:
+                            Server = smtplib.SMTP("secureus24.sgcpanel.com", 587)
+                            password = 'ebayAlerts_1'
+                            Server.starttls()
+                            Server.login(me, password)
+                            Server.sendmail(me, you, msg.as_string())
+                            del msg['Subject']
+                            Server.quit()
+            except:
+                print ('Email could not be resolved')
             else:
-                  pass
-                Server = smtplib.SMTP("secureus24.sgcpanel.com", 587)
-                password = 'ebayAlerts_1'
-                Server.starttls()
-                Server.login(me, password)
-                Server.sendmail(me, you, msg.as_string())
-            del msg['Subject']
-            Server.quit()
-        except:
-            print ('Email could not be resolved')
-        else:
-          pass
+                pass
 
           
