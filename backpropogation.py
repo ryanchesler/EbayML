@@ -2,12 +2,13 @@ import tensorflow as tf
 import numpy as np
 import pickle
 import random
+import time
 from random import shuffle
 datafile = "./Data/processeddata2.pk1"
 datapoints = open(datafile, 'rb')
 data = pickle.load(datapoints)
 datapoints.close
-featuresize = 305
+featuresize = 313
 ##featuresize = 784
 #make train set
 
@@ -62,14 +63,14 @@ a_4 = tf.add(tf.matmul(a_3, drop4), b_4)
 
 
 cross_entropy = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits = a_4, labels = y))
-step = tf.train.AdamOptimizer(learning_rate = .001).minimize(cross_entropy)
+step = tf.train.AdamOptimizer(learning_rate = .000001).minimize(cross_entropy)
 acct_mat = tf.equal(tf.argmax(a_4, 1), tf.argmax(y, 1))
 acct_res = tf.reduce_sum(tf.cast(acct_mat, tf.float32))
 
 sess = tf.Session()
 saver = tf.train.Saver()
 
-batchsize = 2000
+batchsize = 50
 with tf.Session() as sess:
   #sess.run(tf.global_variables_initializer())
   saver.restore(sess, "./Data/Modelv1")

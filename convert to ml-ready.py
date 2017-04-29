@@ -17,10 +17,10 @@ for item in wordtrain:
     split = lowercase.split()
     trainsentences.append(split)
 model = gensim.models.Word2Vec(trainsentences, min_count = 400, size = 10, alpha = .025, iter = 400 )
-wordmodel = "./Data/wordmodel.pk1"
-wordmodeldump = open(wordmodel, 'wb')
-pickle.dump(model, wordmodeldump)
-wordmodeldump.close()
+##wordmodel = "./Data/wordmodel.pk1"
+##wordmodeldump = open(wordmodel, 'wb')
+##pickle.dump(model, wordmodeldump)
+##wordmodeldump.close()
 
 dbfile ="./Data/ebaydata.pk1"
 def openebaydata():
@@ -69,9 +69,10 @@ for k, v in datadump.items():
     itemData[k][3] = v[9]
     itemData[k][4] = v[12]
     itemData[k][5] = v[11]
-    itemData[k][6] = [float(v[6]) + float(v[8])]
+    itemData[k][6] = [float(v[8])]
     itemData[k][7] = v[-1]
 def convertonehot(y):
+    global index
     index = preprocessing.LabelBinarizer()
     indexclasses = [itemData[k][y] for k,v in itemData.items()]
     index.fit(indexclasses)
@@ -79,10 +80,30 @@ def convertonehot(y):
         itemData[k][y] = index.transform([itemData[k][y]]).tolist()
 
 convertonehot(1)
+model1 = "./Data/model1.pk1"
+model1dump = open(model1, 'wb')
+pickle.dump(index, model1dump)
+model1dump.close()
 convertonehot(2)
+model2 = "./Data/model2.pk1"
+model2dump = open(model2, 'wb')
+pickle.dump(index, model2dump)
+model2dump.close()
 convertonehot(3)
+model3 = "./Data/model3.pk1"
+model3dump = open(model3, 'wb')
+pickle.dump(index, model3dump)
+model3dump.close()
 convertonehot(4)
+model4 = "./Data/model4.pk1"
+model4dump = open(model4, 'wb')
+pickle.dump(index, model4dump)
+model4dump.close()
 convertonehot(5)
+model5 = "./Data/model5.pk1"
+model5dump = open(model5, 'wb')
+pickle.dump(index, model5dump)
+model5dump.close()
 featurelist = []
 for k, v in itemData.items():
     datapoint = []
@@ -135,7 +156,7 @@ for x in featurelist:
 for x in featurelist:
     if x[1] == [1,0]:
         q=[0, 0]
-        for z in range(3):
+        for z in range(10):
             q = deepcopy(x)
             q[1] = [0,1]
             q[0][-1] = q[0][-1]
